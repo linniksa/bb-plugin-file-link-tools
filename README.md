@@ -1,6 +1,6 @@
 # File Link Tools
 
-A BB plugin that adds a compact localized file hover card and opens linked items with configurable actions on a normal click (Default App for files by default). Application selection uses the existing BB file-link context menu. Cards require a confirmed existing file or folder. Clicks are overridden only while that link is confirmed; missing and unverified paths keep BB’s original click handling. Visible links are checked once per path while the thread view is mounted. Confirmed links keep a folder icon for revealing or an eye icon for BB preview even when the card is closed; native icons are restored when the plugin unmounts. File operations recheck existence before revealing. BB’s own Markdown autolinking is unchanged.
+A BB plugin that adds a compact localized file hover card and opens linked items with configurable actions on a normal click (code and text in BB’s side panel; other files in Default App). Application selection uses the existing BB file-link context menu. Cards require a confirmed existing file or folder. Clicks are overridden only while that link is confirmed; missing and unverified paths keep BB’s original click handling. Visible links are checked once per path while the thread view is mounted. Confirmed links keep a folder icon for revealing or an eye icon for BB preview even when the card is closed; native icons are restored when the plugin unmounts. File operations recheck existence before revealing. BB’s own Markdown autolinking is unchanged.
 
 ## Development
 
@@ -23,7 +23,7 @@ On touchscreens, hold a verified file link for 400 ms to open its card. Moving m
 
 ## File actions and custom tools
 
-Open **Settings → File Link Tools** to choose the default action, add extension rules, and configure custom tools. The existing switch enables the configured click actions; disabling it preserves BB’s native click behavior. New installations use Default App for files. Folders always use the file manager.
+Open **Settings → File Link Tools** to choose the default action, add extension rules, and configure custom tools. The existing switch enables the configured click actions; disabling it preserves BB’s native click behavior. New installations open common code and text extensions in BB’s side panel; other files use Default App. Saved rules remain unchanged on upgrade. Folders always use the file manager.
 
 Built-in actions are **Show in folder**, **Preview in BB**, and **Default application**. The last invokes BB’s host daemon with `targetId: "default-app"`, using the system file association instead of BB’s preferred editor. The daemon must be available; failures stay explicit. This local daemon route is not exposed as a target selector in the Plugin SDK and must be revalidated on BB upgrades. Each extension has one rule, matches without case sensitivity, and overrides the default. Save applies to all clients through BB realtime; unsaved edits stay local. Concurrent saves use the last saved configuration; the editor warns when another client changes it.
 

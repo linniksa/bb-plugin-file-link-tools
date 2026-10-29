@@ -64,7 +64,16 @@ export const configurationSchema = z.object({
   });
 });
 export type Configuration = z.infer<typeof configurationSchema>;
-export const defaultConfiguration: Configuration = { defaultAction: "external", rules: [], tools: [] };
+export const defaultConfiguration: Configuration = {
+  defaultAction: "external",
+  rules: [{ action: "preview", extensions: [
+    ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".py", ".go", ".rs", ".java", ".kt", ".kts", ".swift",
+    ".c", ".h", ".cpp", ".hpp", ".cc", ".cs", ".rb", ".php", ".sh", ".bash", ".zsh", ".ps1", ".sql", ".html", ".htm",
+    ".css", ".scss", ".sass", ".less", ".vue", ".svelte", ".json", ".jsonc", ".yaml", ".yml", ".toml", ".xml", ".ini", ".conf",
+    ".md", ".mdx", ".txt", ".log", ".proto", ".graphql",
+  ] }],
+  tools: [],
+};
 
 export function actionFor(config: Configuration, path: string, directory = false): Action {
   if (directory) return "folder";
