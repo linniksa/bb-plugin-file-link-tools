@@ -1,48 +1,68 @@
 # File Link Tools
 
-A BB plugin that adds a compact localized file hover card and opens linked items with configurable actions on a normal click (code and text in BB’s side panel; other files in Default App). Application selection uses the existing BB file-link context menu. Cards require a confirmed existing file or folder. Clicks are overridden only while that link is confirmed; missing and unverified paths keep BB’s original click handling. Visible links are checked once per path while the thread view is mounted. Confirmed links keep a folder icon for revealing or an eye icon for BB preview even when the card is closed; native icons are restored when the plugin unmounts. File operations recheck existence before revealing. BB’s own Markdown autolinking is unchanged.
+**Useful actions for every file link in BB.**
 
-## Development
+See file details without leaving the conversation. Preview code in BB, reveal files in their folder, or open them with the app you choose.
 
-Requires Node.js 22.6+ and BB 0.47+ with Plugin SDK 0.6.79+.
+![File Link Tools: file metadata, a text preview, quick actions and a folder summary](docs/media/file-cards.gif)
 
-- Install dependencies: `npm ci --include=dev`
-- Type check: `npm run check`
-- Self-check: `npm test`
-- Build: `npm run build`
-- Install: `bb plugin install .`
-- Reload after building: `bb plugin reload file-link-tools`
+## A small card. The actions you need.
 
-[Behavior and operating constraints](skills/file-link-tools/SKILL.md).
+- **Hover for details.** File size, a one-line path and small image or text previews.
+- **Peek into folders.** Immediate file and subfolder counts, without a recursive scan.
+- **Know what a click does.** Each link’s icon reflects its configured action.
+- **Keep familiar controls.** Copy the name or path beside it; use BB’s own application menu.
+- **Use touch or a keyboard.** Long press opens the card. Down Arrow enters its actions; Escape closes it.
 
-File revealing is maintained locally in [`reveal-file.ts`](reveal-file.ts), adapted from [`reveal-file` 0.1.2](https://github.com/sindresorhus/reveal-file) under its [MIT license](LICENSE.reveal-file). Linux URI encoding and GVariant argument serialization are corrected locally. Platforms are native macOS, Windows, and Linux with a supported D-Bus file manager; WSL interoperability is not implemented. Windows drive paths, UNC paths, spaces, and Cyrillic names have parser checks; real Windows and Linux GUI execution has not been verified in this workspace.
+## Make every click yours
 
-Folder cards count immediate files, subfolders and other entries (including symbolic links), including hidden entries. This summary does not recurse and is read only when opening a card.
+Start with sensible defaults:
 
-On touchscreens, hold a verified file link for 400 ms to open its card. Moving more than 10 CSS pixels, scrolling, or cancelling the pointer cancels the gesture. A short tap keeps the normal link action; releasing after a hold does not open the file. The card stays open until an outside tap, page scroll, or Escape.
+| File type | Normal click |
+| --- | --- |
+| Common code, configuration and text extensions | Preview in BB’s side panel |
+| Other files, including media and documents | Open with the system’s default application |
+| Folders | Open in the file manager |
 
-## File actions and custom tools
+Change these in **Settings → File Link Tools**. Extension rules override the default. Add your own tools with a name, icon and command, then try a filename to check which rule wins.
 
-Open **Settings → File Link Tools** to choose the default action, add extension rules, and configure custom tools. The existing switch enables the configured click actions; disabling it preserves BB’s native click behavior. New installations open common code and text extensions in BB’s side panel; other files use Default App. Saved rules remain unchanged on upgrade. Folders always use the file manager.
+![File Link Tools settings: extension rules, a VS Code command and a filename rule check](docs/media/settings.gif)
 
-Agents can read and change the same configuration with `bb file-link-tools`; see `bb file-link-tools --help`.
+For example, a VS Code tool can use:
 
-Built-in actions are **Show in folder**, **Preview in BB**, and **Default application**. The last invokes BB’s host daemon with `targetId: "default-app"`, using the system file association instead of BB’s preferred editor. The daemon must be available; failures stay explicit. This local daemon route is not exposed as a target selector in the Plugin SDK and must be revalidated on BB upgrades. Each extension has one rule, matches without case sensitivity, and overrides the default. Save applies to all clients through BB realtime; unsaved edits stay local. Concurrent saves use the last saved configuration; the editor warns when another client changes it.
+```text
+code --goto "{path}:{line}:{column}"
+```
 
-Custom tools have a name, one of 24 BB icons, and a single-line command. Quote arguments containing spaces. `{path}`, `{line}`, and `{column}` are substituted after splitting the command into arguments, without shell expansion. Line and column default to 1; a range uses its start line. On Windows, use an executable or explicitly name an interpreter for `.cmd`/`.bat` scripts. The plugin launches only saved tools by ID, rechecks the file and local host, and reports process-start errors; it does not wait for a GUI application's eventual exit.
+Commands run without a shell. BB supplies the native application menu; the plugin does not maintain a separate app list.
 
-Configuration is validated on the server and stored in BB’s namespaced plugin KV store. There are at most 50 rules and 50 tools. App discovery and the native BB menu remain owned by BB.
+## Install
 
-## Hover previews
+Requires **BB 0.47+** and **Node.js 22.6+**.
 
-The card offers BB’s built-in viewer through the public file-preview navigation API, preserving line and range locations. Small raster images (up to 1 MiB) and text files (up to 64 KiB, first eight lines and at most 2,000 characters) also have an inline preview. Content comes from `useSdk().files.read`; text uses BB’s SourceCode viewer. Binary, oversized and unsupported content has no inline preview. Pending reads are cancelled when the card closes; read and image-decoding failures remain visible.
+```sh
+bb plugin install https://github.com/linniksa/bb-plugin-file-link-tools
+```
 
-## Translation
+Open **Settings → File Link Tools** to customize it. Turn off **Use configured file-link actions** to let BB handle normal clicks again.
 
-Plugin-owned UI strings live in `messages.ts`. The language is selected from the client's `navigator.language` and updates on `languagechange`. Supported languages match Orca's built-in set (English, Simplified Chinese, Korean, Japanese, Spanish), plus the plugin's existing Russian. Regional tags select their base language. Unsupported languages and Traditional Chinese locales use English, matching Orca's locale policy. Numbers use the selected locale; RPC requests carry that locale for expected file-operation errors. Unexpected system errors retain their original diagnostic text.
+## Ask your agent
 
-BB owns its menus and their translations. Its native plugin-setting label remains English because the installed SDK accepts only a static server-defined label. The proposed shared locale API in [BB issue #3721](https://github.com/get-bb/bb/issues/3721) is not part of the installed SDK; the plugin does not add a separate locale setting.
+“Open Python files in BB” or “Use my editor for TypeScript.” Agents can change the same settings through the plugin CLI:
 
-## BB UI components
+```sh
+bb file-link-tools settings show
+bb file-link-tools settings rule set .py,.ts,.tsx preview
+bb file-link-tools --help
+```
 
-Button and Tooltip source is vendored from the [BB 0.47.1 registry](https://github.com/get-bb/bb/tree/desktop-v0.47.1/packages/plugin-registry/r), under [BB’s license](LICENSE.BB). Their runtime primitives are supplied by BB. Unused helpers are omitted; tooltip focus detection uses native `:focus-visible` to avoid persistent document listeners.
+## Good to know
+
+- Cards and click overrides require a confirmed existing file or folder. Other links retain BB’s handling.
+- Inline previews are for small images and text. Video has no inline player; open it with the default application or BB’s viewer.
+- File operations require a local thread on BB’s primary host. macOS has been exercised; native Windows and Linux GUI behavior remains unverified. WSL is not supported.
+- English, Simplified Chinese, Korean, Japanese, Spanish and Russian are selected automatically from the browser locale.
+
+The animations show the actual plugin in BB, with English UI and example links. The custom-tool example is an unsaved settings draft.
+
+[Development, preview limits and platform details](docs/reference.md) · [Agent instructions](skills/file-link-tools/SKILL.md)
