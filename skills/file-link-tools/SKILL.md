@@ -1,9 +1,11 @@
 ---
 name: file-link-tools
-description: Inspect or troubleshoot File Link Tools hover cards, default folder opening, and integration with BB file menus.
+description: Configure File Link Tools actions and custom tools, or troubleshoot file-link cards and BB menus.
 ---
 
 # File Link Tools
+
+To change settings, read `bb file-link-tools settings show`, then use `settings default`, `settings rule set/remove`, or `settings set '<json>'` for the full configuration, preserving unrelated values. Actions: `preview` (BB side panel), `external` (Default App), `folder`, or a saved tool UUID; command syntax: `bb file-link-tools --help`.
 
 Hover or focus an existing file link in a chat message to see metadata and previews. Missing and unverified paths keep BB’s original click handler; BB still owns Markdown autolinking. Confirmed visible links persistently show their click action, including custom-tool icons. Native icons are restored on plugin disposal. Visible paths are checked once per mounted thread view; revealing and custom launching recheck existence.
 

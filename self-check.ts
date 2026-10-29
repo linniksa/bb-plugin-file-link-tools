@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mock } from "node:test";
 import { attachLongPress } from "./long-press.ts";
+import { settingsCli } from "./cli.ts";
 import { createServer } from "node:http";
 import { openDefaultFile } from "./default-app.ts";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
@@ -140,6 +141,26 @@ configurationSchema.parse(defaultConfiguration);
 for (const path of ["/tmp/code.TS", "C:\\demo\\main.py", "/tmp/package.json", "/tmp/README.md", "/tmp/page.html"]) assert.equal(actionFor(defaultConfiguration, path), "preview");
 for (const path of ["/tmp/video.mp4", "/tmp/report.pdf", "/tmp/archive.zip", "/tmp/unknown.xyz"]) assert.equal(actionFor(defaultConfiguration, path), "external");
 assert.equal(actionFor(defaultConfiguration, "/tmp/code.ts", true), "folder");
+{
+  let saved = structuredClone(config);
+  const cli = settingsCli(async () => structuredClone(saved), async value => { saved = configurationSchema.parse(value); return saved; });
+  const call = (...args: string[]) => cli.run(args, { signal: new AbortController().signal });
+  assert.equal((await call("settings", "show")).stdout, JSON.stringify(config));
+  assert.equal((await call("settings", "default", "external")).exitCode, 0);
+  assert.equal(saved.defaultAction, "external"); assert.deepEqual(saved.tools, config.tools); assert.deepEqual(saved.rules, config.rules);
+  assert.equal((await call("settings", "rule", "set", ".TS,.py", "preview")).exitCode, 0);
+  assert.equal(actionFor(saved, "/tmp/code.ts"), "preview"); assert.equal(actionFor(saved, "/tmp/code.py"), "preview");
+  assert.equal(actionFor(saved, "/tmp/photo.png"), "preview"); assert.deepEqual(saved.tools, config.tools);
+  const before = structuredClone(saved);
+  for (const args of [["default", "unknown"], ["rule", "set", ".py,.py", "preview"], ["rule", "remove", "py"], ["set", "{}"], ["set", "not json"]]) {
+    assert.notEqual((await call("settings", ...args)).exitCode, 0);
+    assert.deepEqual(saved, before);
+  }
+  assert.equal((await call("settings", "rule", "remove", ".ts")).exitCode, 0);
+  assert.equal(actionFor(saved, "/tmp/code.ts"), "external"); assert.equal(actionFor(saved, "/tmp/code.py"), "preview");
+  assert.equal((await call("settings", "set", JSON.stringify(config))).exitCode, 0); assert.deepEqual(saved, config);
+  assert.equal((await call("settings", "--help")).exitCode, 0);
+}
 assert.equal(actionIcon(config, toolId), "Code");
 assert.equal(toolIcons.length, 24);
 assert.deepEqual(commandArguments('"C:\\Program Files\\Editor\\editor.exe" "{path}"'), ['C:\\Program Files\\Editor\\editor.exe', "{path}"]);

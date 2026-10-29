@@ -5,6 +5,7 @@ import { getMessages, locales, type Locale } from "./messages";
 import { configurationSchema, defaultConfiguration } from "./actions";
 import { launchTool } from "./launch-tool";
 import { openDefaultFile } from "./default-app";
+import { settingsCli } from "./cli";
 
 const target = z.object({ path: filePathSchema, threadId: z.string().min(1), locale: z.enum(locales) });
 export const rpcContract = defineRpcContract({
@@ -37,6 +38,7 @@ export default function plugin(bb: BbPluginApi) {
     bb.realtime.publish("configuration", null);
     return config;
   }
+  bb.cli.register(settingsCli(configuration, saveConfiguration));
   async function requireLocalThread(threadId: string, locale: Locale) {
     const [thread, config] = await Promise.all([
       bb.sdk.threads.get({ threadId, include: "environment" }), bb.sdk.system.config(),
