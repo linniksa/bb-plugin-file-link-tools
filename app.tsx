@@ -15,6 +15,7 @@ import { actionFor, actionIcon, builtInActions, type Action } from "./actions";
 import { FileLinkSettings } from "./settings";
 import { useConfiguration } from "./use-configuration";
 import { useLocale } from "./use-locale";
+import { attachLongPress } from "./long-press";
 
 type ActiveLink = ParsedFileLink & { anchor: HTMLAnchorElement; threadId: string };
 type Info = { size: number | null; directory: boolean; hostId: string; entries: { files: number; directories: number; other: number } | null };
@@ -76,11 +77,14 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
     setActive(null);
     let showTimer: ReturnType<typeof setTimeout> | undefined;
     let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    let touchPinned = false;
+    let touchInteraction = false;
     function hide() {
       if (menuRequested.current && document.querySelector('[role="menu"]')) return;
       clearTimeout(showTimer); clearTimeout(hideTimer);
       menuRequested.current = false;
       current.current = null;
+      touchPinned = false;
       setActive(null);
     }
     function targetFor(node: EventTarget | null): ActiveLink | null {
@@ -92,7 +96,7 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
       const threadId = anchor.closest("[data-timeline-row-id]")?.getAttribute("data-timeline-row-id")?.split(":")[0];
       return link && threadId === ownerThreadId ? { anchor, ...link, threadId } : null;
     }
-    function show(target: ActiveLink) {
+    function show(target: ActiveLink, delay = 250) {
       clearTimeout(hideTimer);
       if (current.current?.anchor === target.anchor) return;
       clearTimeout(showTimer);
@@ -111,13 +115,15 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
             setError(cause instanceof Error ? cause.message : String(cause)); setActive(target);
           },
         );
-      }, 250);
+      }, delay);
     }
     function insideCard(node: EventTarget | null) {
       return node instanceof Node && (card.current?.contains(node)
         || (node instanceof Element && node.closest("[data-file-link-tools-tooltip]")));
     }
     function enter(event: Event) {
+      if (event.type === "pointerover" && (event as PointerEvent).pointerType === "touch") return;
+      if (event.type === "focusin" && touchInteraction) return;
       const node = event.target;
       if (insideCard(node) || (current.current && node instanceof Element && node.closest('[role="menu"]'))) {
         clearTimeout(hideTimer);
@@ -127,6 +133,7 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
       if (target && !(event.type === "pointerover" && card.current?.contains(document.activeElement))) show(target);
     }
     function leave(event: Event) {
+      if (touchPinned || (event.type === "pointerout" && (event as PointerEvent).pointerType === "touch")) return;
       const node = event.target;
       if (!(node instanceof Node) || !(current.current?.anchor.contains(node) || insideCard(node)
         || (menuRequested.current && node instanceof Element && node.closest('[role="menu"]')))) return;
@@ -152,6 +159,7 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
       void run(actionFor(config, target.path, confirmed.directory), target, confirmed.hostId);
     }
     function key(event: KeyboardEvent) {
+      touchInteraction = false;
       if (event.key === "Escape" && current.current) {
         const anchor = current.current.anchor;
         const restoreFocus = card.current?.contains(document.activeElement);
@@ -166,6 +174,19 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
       if (insideCard(event.target)) return;
       hide();
     }
+    function outside(event: PointerEvent) {
+      touchInteraction = event.pointerType === "touch";
+      if (!insideCard(event.target) && !(event.target instanceof Node && current.current?.anchor.contains(event.target))) hide();
+    }
+    const disposeLongPress = attachLongPress(document, node => {
+      if (menuRequested.current) return null;
+      const target = targetFor(node);
+      return target && verified.current.get(target.anchor)?.path === target.path ? target.anchor : null;
+    }, anchor => {
+      const target = targetFor(anchor);
+      if (target) { touchPinned = true; show(target, 0); }
+    });
+    document.addEventListener("pointerdown", outside);
     document.addEventListener("pointerover", enter);
     document.addEventListener("pointerout", leave);
     document.addEventListener("focusin", enter);
@@ -175,6 +196,8 @@ function FileLinkOverlay({ threadId: ownerThreadId }: PluginThreadHeaderActionPr
     window.addEventListener("resize", hide);
     window.addEventListener("scroll", scroll, true);
     return () => {
+      disposeLongPress();
+      document.removeEventListener("pointerdown", outside);
       clearTimeout(showTimer); clearTimeout(hideTimer); current.current = null;
       document.removeEventListener("pointerover", enter);
       document.removeEventListener("pointerout", leave);

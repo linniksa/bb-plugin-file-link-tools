@@ -19,6 +19,8 @@ File revealing is maintained locally in [`reveal-file.ts`](reveal-file.ts), adap
 
 Folder cards count immediate files, subfolders and other entries (including symbolic links), including hidden entries. This summary does not recurse and is read only when opening a card.
 
+On touchscreens, hold a verified file link for 400 ms to open its card. Moving more than 10 CSS pixels, scrolling, or cancelling the pointer cancels the gesture. A short tap keeps the normal link action; releasing after a hold does not open the file. The card stays open until an outside tap, page scroll, or Escape.
+
 ## File actions and custom tools
 
 Open **Settings → File Link Tools** to choose the default action, add extension rules, and configure custom tools. The existing switch enables the configured click actions; disabling it preserves BB’s native click behavior. New installations use Default App for files. Folders always use the file manager.

@@ -13,6 +13,8 @@ The card shows the path tail on one line. Copy buttons sit beside the name and p
 
 The card's “Меню BB” action opens the original BB context menu. BB owns the installed-app list and app launching. Do not add a second app registry or copy BB's discovery logic into this plugin.
 
+Touch links support long press; see the README for timing and cancellation rules. Verify that a short tap still opens normally and releasing a held link does not also open it. Unknown links keep native handling.
+
 File metadata and revealing require local threads on the primary server host. Remote threads show an explicit error for these actions. Platform launching uses the local `reveal-file.ts`; see the README for its origin, license, support, and verification limits. Folder cards count first-level files, subfolders and other entries, including hidden entries, without following nested symbolic links or calculating recursive disk usage. Only rendered `file://` links inside timeline messages are enhanced.
 
 The card mounts through the public thread-header slot so BB supplies the thread’s file-viewer context; each instance handles only that thread’s links. It uses public RPC APIs, plus BB's existing link DOM and context-menu event. There is no public link-decoration slot. Changes to BB's timeline attributes or context-menu behavior require revalidation. Reload and disable must remove the card, listeners, timers, and accessibility attributes.

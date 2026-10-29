@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { mock } from "node:test";
+import { attachLongPress } from "./long-press.ts";
 import { createServer } from "node:http";
 import { openDefaultFile } from "./default-app.ts";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
@@ -13,6 +15,49 @@ import { actionFor, actionIcon, commandArguments, configurationSchema, defaultCo
 import { launchTool } from "./launch-tool.ts";
 import { settingsMessages } from "./settings-messages.ts";
 import { getMessages, locales, resolveLocale } from "./messages.ts";
+
+mock.timers.enable({ apis: ["setTimeout"] });
+try {
+  const root = new EventTarget();
+  const anchor = root as unknown as HTMLAnchorElement;
+  let verified = true;
+  let holds = 0;
+  const dispose = attachLongPress(root, node => verified && node === root ? anchor : null, () => { holds++; });
+  const emit = (type: string, props = {}) => {
+    const event = new Event(type, { cancelable: true });
+    Object.assign(event, { pointerType: "touch", isPrimary: true, button: 0, pointerId: 1, clientX: 0, clientY: 0, detail: 1 }, props);
+    root.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+  emit("pointerdown"); mock.timers.tick(100); emit("pointerup"); mock.timers.tick(400);
+  assert.equal(holds, 0); assert.equal(emit("click"), false);
+  emit("pointerdown"); mock.timers.tick(400);
+  assert.equal(holds, 1); assert.equal(emit("contextmenu"), true);
+  emit("pointerup"); assert.equal(emit("click"), true); assert.equal(emit("click"), false);
+  for (const cancellation of ["pointercancel", "scroll", "pointermove"]) {
+    emit("pointerdown"); mock.timers.tick(200); emit(cancellation, { clientX: 11 }); mock.timers.tick(400);
+    assert.equal(holds, 1);
+  }
+  for (const props of [{ pointerType: "mouse" }, { isPrimary: false }, { button: 2 }]) {
+    emit("pointerdown", props); mock.timers.tick(400); assert.equal(holds, 1);
+  }
+  emit("pointerdown"); verified = false; mock.timers.tick(400);
+  assert.equal(holds, 1); assert.equal(emit("contextmenu"), false);
+  verified = true;
+  emit("pointerdown"); mock.timers.tick(400); emit("pointerup");
+  assert.equal(holds, 2); assert.equal(emit("click", { detail: 0 }), false);
+  mock.timers.tick(1000); assert.equal(emit("click"), false);
+  emit("pointerdown"); mock.timers.tick(400); emit("scroll"); mock.timers.tick(1000);
+  assert.equal(emit("click"), false);
+  emit("pointerdown"); dispose(); mock.timers.tick(400);
+  assert.equal(holds, 3); assert.equal(emit("click"), false);
+  emit("pointerdown"); mock.timers.tick(400); assert.equal(holds, 3);
+  const disposeAgain = attachLongPress(root, node => node === root ? anchor : null, () => {});
+  emit("pointerdown"); mock.timers.tick(400); emit("pointerup"); assert.equal(emit("click"), true);
+  mock.timers.tick(100); emit("pointerdown"); mock.timers.tick(400);
+  mock.timers.tick(600); emit("pointerup"); assert.equal(emit("click"), true);
+  disposeAgain();
+} finally { mock.timers.reset(); }
 
 await assert.rejects(revealFile("relative.txt"), /Path must be absolute/);
 for (const path of ["/tmp/O'Reilly.txt", '/tmp/a"b\\c #?%.txt', "/tmp/файл 🐈.txt", "/tmp/'], 'file:///other.txt", "/tmp/$(touch nope); `echo nope`.txt"]) {
