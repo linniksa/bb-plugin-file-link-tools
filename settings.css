@@ -1,0 +1,68 @@
+
+.flt-settings * { box-sizing: border-box; }
+.flt-settings { margin: 0; color: var(--foreground,#262626); font: 14px/1.45 var(--font-sans,system-ui); }
+.flt-settings h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.flt-settings p { margin: 0; color: var(--muted-foreground,#737373); }
+.flt-settings header { margin-bottom: 24px; }
+.flt-settings section { padding: 20px 0; border-top: 1px solid var(--border,#e5e5e5); }
+.flt-settings .description { margin-top: 4px; font-size: 12px; }
+.flt-settings .row, .flt-settings table tr { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr) 36px; gap: 12px; align-items: center; }
+.flt-settings .controls { min-width: 0; }
+.flt-settings .controls select { width: 100%; }
+.flt-settings button, .flt-settings select, .flt-settings input { height: 36px; min-width: 0; padding: 7px 10px; border: 1px solid var(--input,#ddd); border-radius: 6px; background: var(--background,#fff); color: inherit; font: inherit; line-height: 20px; }
+.flt-settings button, .flt-settings select { cursor: pointer; }
+.flt-settings button:hover { background: var(--accent,#f5f5f5); }
+.flt-settings button:focus-visible, .flt-settings select:focus-visible, .flt-settings input:focus-visible, .flt-settings summary:focus-visible { outline: 2px solid var(--ring,#777); outline-offset: 2px; }
+.flt-settings button:disabled { opacity: .4; cursor: default; }
+.flt-settings select { max-width: 100%; }
+.flt-settings table { display: block; width: 100%; margin: 16px 0 4px; }
+.flt-settings thead, .flt-settings tbody { display: block; }
+.flt-settings th { padding: 0 0 8px; text-align: left; font-size: 12px; font-weight: 400; line-height: 18px; color: var(--muted-foreground,#737373); }
+.flt-settings tbody tr { padding: 8px 0; border-top: 1px solid var(--border,#e5e5e5); }
+.flt-settings td { min-width: 0; padding: 0; }
+.flt-settings td input, .flt-settings td select { width: 100%; }
+.flt-settings td input, .flt-settings .command input { font-family: var(--font-mono,monospace); font-size: 12px; }
+.flt-settings .delete { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; align-self: end; font-size: 20px; color: var(--muted-foreground,#737373); }
+.flt-settings .add { margin-top: 4px; padding-left: 0; border: 0; background: transparent; }
+.flt-settings .tools { margin-top: 16px; }
+.flt-settings .tool { padding: 12px 0; border-top: 1px solid var(--border,#e5e5e5); }
+.flt-settings .tool-grid { display: grid; grid-template-columns: minmax(0,1fr) 48px 36px; gap: 12px; align-items: end; }
+.flt-settings .tool label, .flt-settings .icon-field { display: grid; grid-template-rows: 18px 36px; gap: 6px; margin: 0; font-size: 12px; line-height: 18px; color: var(--muted-foreground,#737373); }
+.flt-settings .tool input { width: 100%; color: var(--foreground,#262626); }
+.flt-settings .tool label:not(.command) input { font-size: 14px; }
+.flt-settings .tool .command { margin-top: 12px; width: calc(100% - 48px); }
+.flt-settings .icon-picker { position: relative; }
+.flt-settings .icon-picker summary { display: flex; align-items: center; justify-content: center; height: 36px; border: 1px solid var(--input,#ddd); border-radius: 6px; background: var(--background,#fff); color: var(--foreground,#262626); cursor: pointer; list-style: none; }
+.flt-settings .icon-picker summary::-webkit-details-marker { display: none; }
+.flt-settings .icon-picker svg { width: 18px; height: 18px; }
+.flt-settings .icon-picker summary .chevron { width: 12px; height: 12px; margin-left: 3px; }
+.flt-settings .icon-options { position: absolute; top: 42px; right: 0; z-index: 2; display: grid; grid-template-columns: repeat(6,36px); gap: 6px; padding: 10px; border: 1px solid var(--border,#ddd); border-radius: 8px; background: var(--popover,#fff); color: var(--foreground,#262626); box-shadow: 0 6px 20px #0002; }
+.flt-settings .icon-options button { display: grid; place-items: center; width: 36px; height: 36px; padding: 8px; }
+.flt-settings .icon-options button[aria-pressed=true] { background: var(--accent,#e9e9e9); outline: 2px solid var(--ring,#777); outline-offset: -2px; }
+.flt-settings .sample { margin-top: 16px; padding: 16px; border-radius: var(--radius,8px); background: var(--muted,#f5f5f5); }
+.flt-settings .sample label { display: block; margin-bottom: 6px; font-size: 12px; line-height: 18px; color: var(--muted-foreground,#737373); }
+.flt-settings .sample input { width: 100%; }
+.flt-settings .result { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.flt-settings .result svg { width: 18px; height: 18px; }
+.flt-settings .result strong { font-weight: 500; }
+.flt-settings .result small { display: block; font-size: 12px; color: var(--muted-foreground,#737373); }
+.flt-settings .error { margin: 8px 0; color: var(--destructive-text,#b42318); font-size: 12px; }
+.flt-settings .error:empty { display: none; }
+.flt-settings .footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; font-size: 12px; color: var(--muted-foreground,#737373); }
+.flt-settings .footer button { flex-shrink: 0; font-size: 12px; }
+.flt-settings svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 540px) {
+.flt-settings .row { grid-template-columns: minmax(0,1fr); gap: 12px; }
+.flt-settings table tr { grid-template-columns: minmax(0,1fr) minmax(0,1.25fr) 36px; gap: 8px; }
+.flt-settings td input, .flt-settings td select { padding-left: 6px; padding-right: 6px; font-size: 12px; }
+.flt-settings .tool-grid { gap: 8px; }
+.flt-settings .tool .command { width: calc(100% - 44px); }
+.flt-settings .footer { align-items: flex-start; flex-direction: column; gap: 12px; }
+}
+@media (pointer: coarse) {
+.flt-settings .icon-options { grid-template-columns: repeat(5,44px); }
+.flt-settings .icon-options button { width: 44px; height: 44px; }
+}
+.flt-settings fieldset { border:0; padding:0; margin:0; min-width:0; }
+.flt-settings .delete-wrap { align-self:end; }
+.flt-settings header h2 { margin:0; font-size:18px; font-weight:600; }
